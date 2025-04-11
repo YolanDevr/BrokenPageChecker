@@ -1,9 +1,9 @@
 services:
   - type: web
     name: broken-page-checker
-    env: python
-    buildCommand: ""
-    startCommand: ./start.sh
     runtime: python
-    plan: free
-    branch: main
+    buildCommand: "./build.sh"
+    startCommand: "streamlit run app.py"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11
