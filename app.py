@@ -36,17 +36,19 @@ def suggest_redirect(url):
     else:
         return f"{parsed.scheme}://{parsed.netloc}/"
 
-# --- Browser Setup (voor Streamlit Cloud) ---
 def setup_browser():
     chrome_options = Options()
-    chrome_options.binary_location = "/usr/bin/chromium-browser"
+    chrome_options.binary_location = "/usr/bin/chromium-browser"       # ✅ DE BROWSER
     chrome_options.add_argument('--headless=new')
     chrome_options.add_argument('--no-sandbox')
     chrome_options.add_argument('--disable-dev-shm-usage')
     chrome_options.add_argument('--disable-gpu')
     chrome_options.add_argument('--window-size=1920,1080')
-    service = Service("/usr/bin/chromedriver")
+
+    service = Service("/usr/lib/chromium/chromedriver")                # ✅ DE DRIVER
     return webdriver.Chrome(service=service, options=chrome_options)
+
+
 
 # --- Check functies ---
 def has_large_images(soup):
