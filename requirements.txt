@@ -4,5 +4,3 @@ webdriver-manager
 beautifulsoup4
 pandas
 openpyxl
-chromium
-chromium-chromedriver

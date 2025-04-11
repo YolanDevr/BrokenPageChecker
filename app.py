@@ -2,27 +2,28 @@ import streamlit as st
 import pandas as pd
 from bs4 import BeautifulSoup
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.options import Options
 import os
 import re
 import time
-from threading import Lock
 from io import BytesIO
 import zipfile
 from selenium.webdriver.support.ui import WebDriverWait
 from urllib.parse import urlparse
 
+# --- Streamlit UI setup ---
 st.set_page_config(page_title="Broken Page Checker", layout="wide")
 st.title("🔍 Broken Page & Soft 404 Checker")
 
 uploaded_file = st.file_uploader("Upload hier je lijst met URL's (CSV of Excel)", type=["csv", "xlsx"])
 
+# --- Parameters ---
 TEXT_LENGTH_THRESHOLD = 200
 HERO_IMAGE_SIZE_THRESHOLD = 500 * 1024  # 500 KB
 os.makedirs("screenshots", exist_ok=True)
 
+# --- Hulpfuncties ---
 def slugify(text):
     return re.sub(r'[^a-zA-Z0-9_-]', '_', text)
 
@@ -35,21 +36,19 @@ def suggest_redirect(url):
     else:
         return f"{parsed.scheme}://{parsed.netloc}/"
 
+# --- Browser Setup (voor Streamlit Cloud) ---
 def setup_browser():
     chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.binary_location = "/usr/bin/google-chrome"  # of "/usr/bin/chromium-browser"
+    chrome_options.binary_location = "/usr/bin/chromium-browser"
+    chrome_options.add_argument('--headless=new')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument('--window-size=1920,1080')
+    service = Service("/usr/bin/chromedriver")
+    return webdriver.Chrome(service=service, options=chrome_options)
 
-    return webdriver.Chrome(
-        service=Service(ChromeDriverManager().install()),
-        options=chrome_options
-    )
-
-
+# --- Check functies ---
 def has_large_images(soup):
     images = soup.find_all("img")
     for img in images:
@@ -141,6 +140,7 @@ def check_url(driver, url):
             "advice": "Fout bij laden van pagina.\n🔁 Suggestie: redirect permanent (301) naar homepage"
         }
 
+# --- Main run ---
 if uploaded_file:
     if uploaded_file.name.endswith(".csv"):
         df = pd.read_csv(uploaded_file)
@@ -203,6 +203,5 @@ if uploaded_file:
             for i, row in result_df.iterrows():
                 if row["screenshot"] and os.path.exists(row["screenshot"]):
                     zip_file.write(row["screenshot"], arcname=os.path.basename(row["screenshot"]))
-
         zip_buffer.seek(0)
         st.download_button("📦 Download alle screenshots als ZIP", data=zip_buffer, file_name="screenshots.zip", mime="application/zip")
