@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: broken-page-checker
+    env: python
+    buildCommand: ""
+    startCommand: ./start.sh
+    runtime: python
+    plan: free
+    branch: main
